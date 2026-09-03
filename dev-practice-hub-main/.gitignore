@@ -1,0 +1,21 @@
+# Secrets & credentials — NEVER commit these
+.env
+credentials.json
+token.json
+service_account.json
+.github/secrets/
+
+# Local data
+*.db
+chroma_store/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+
+# OS
+.DS_Store

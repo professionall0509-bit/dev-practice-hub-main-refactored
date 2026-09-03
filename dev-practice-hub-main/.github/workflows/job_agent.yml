@@ -1,0 +1,42 @@
+name: AI Job Agent
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+jobs:
+  run-agent:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      # Gmail's OAuth flow needs a browser, which CI doesn't have.
+      # Generate token.json once locally (see README "CI setup"),
+      # base64-encode it, and store it as the GMAIL_TOKEN_B64 secret.
+      - name: Restore Gmail token
+        run: echo "${{ secrets.GMAIL_TOKEN_B64 }}" | base64 -d > token.json
+
+      - name: Run AI Job Agent
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: python main.py
+
+      # Optional: only runs if a sheet ID secret has been configured.
+      - name: Sync to Google Sheets
+        if: ${{ secrets.SHEET_ID != '' }}
+        env:
+          SHEET_ID: ${{ secrets.SHEET_ID }}
+        run: |
+          echo "${{ secrets.GOOGLE_SERVICE_ACCOUNT_B64 }}" | base64 -d > service_account.json
+          python sheets_sync.py
